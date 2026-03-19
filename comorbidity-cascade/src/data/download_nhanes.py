@@ -58,6 +58,7 @@ def main():
         for key, module in modules.items():
             url_modern = f"https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/{start_year}/DataFiles/{module}_{suffix}.xpt"
             url_legacy = f"https://wwwn.cdc.gov/Nchs/Nhanes/{cycle}/{module}_{suffix}.XPT"
+            url_pandemic = f"https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/P_{module}.xpt"
             
             xpt_path = os.path.join(cycle_dir, f"{module}_{suffix}.XPT")
             csv_path = os.path.join(cycle_dir, f"{module}_{suffix}.csv")
@@ -71,6 +72,8 @@ def main():
                 success = download_file(url_modern, xpt_path)
                 if not success:
                     success = download_file(url_legacy, xpt_path)
+                if not success and cycle == "2019-2020":
+                    success = download_file(url_pandemic, xpt_path)
                     
                 if not success:
                     print(f"{module:<10} | {cycle:<11} | {'-':<6} | {'-':<4} | {'FAILED (404/Net)':<15}")
