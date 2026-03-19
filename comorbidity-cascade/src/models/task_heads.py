@@ -5,6 +5,11 @@ class DiseaseTaskHead(nn.Module):
     def __init__(self, input_dim, hidden_dim=64, disease_name=''):
         super(DiseaseTaskHead, self).__init__()
         self.disease_name = disease_name
+        
+        # layer1 is used for the FIRST forward pass (always maps from z_dim=128 to 1)
+        self.layer1 = nn.Linear(128, 1)
+        
+        # net is used for the SECOND forward pass (maps from augmented input_dim to 1)
         self.net = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.ReLU(),

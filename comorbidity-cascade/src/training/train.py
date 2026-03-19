@@ -17,6 +17,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.dataset import ComorbidityDataset, create_kfold_splits, get_dataloaders
 from models.mtl_flat import MTLFlat, masked_bce_loss
+from models.graph_propagation import ComorbidityDAG
+from models.mtl_graph import MTLWithGraph
 
 def get_model(model_name, input_dim, disease_names, config):
     if model_name == "mtl_flat":
@@ -24,6 +26,14 @@ def get_model(model_name, input_dim, disease_names, config):
         encoder_config['hidden_dims'] = config['model']['encoder_dims']
         head_config = {'hidden_dim': config['model']['task_head_dims'][0]}
         return MTLFlat(input_dim, disease_names, encoder_config, head_config)
+    elif model_name == "mtl_graph":
+        encoder_config = config['model']
+        encoder_config['hidden_dims'] = config['model']['encoder_dims']
+        head_config = {'hidden_dim': config['model']['task_head_dims'][0]}
+        # config['config_path'] is not natively in the config dict. 
+        # But we know we are training from the root directory with config.yaml
+        dag = ComorbidityDAG("config.yaml")
+        return MTLWithGraph(input_dim, disease_names, dag, encoder_config, head_config)
     else:
         raise ValueError(f"Model {model_name} not implemented in trainer yet.")
 
