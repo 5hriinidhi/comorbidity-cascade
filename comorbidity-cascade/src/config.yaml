@@ -1,0 +1,60 @@
+paths:
+  raw_data:        data/raw/
+  processed_data:  data/processed/
+  final_data:      data/final/
+  checkpoints:     checkpoints/
+  results:         results/
+
+nhanes:
+  cycles:          ["2015-2016", "2017-2018", "2019-2020"]
+  modules:
+    demographics:  DEMO
+    diabetes:      DIQ
+    blood_pressure: BPQ
+    cardiac:       MCQ
+    kidney:        KIQ
+    cholesterol:   TCHOL
+    glucose:       GLU
+    body_measures: BMX
+    physical_act:  PAQ
+    sleep:         SLQ
+    smoking:       SMQ
+    alcohol:       ALQ
+    diet:          DR1TOT
+
+diseases:
+  labels:    [obesity, t2d, hypertension, cad, ckd, stroke, osteoporosis]
+  n_classes: 7
+
+graph:
+  edges:
+    - [obesity,      t2d,          0.85]
+    - [obesity,      hypertension, 0.72]
+    - [obesity,      cad,          0.60]
+    - [t2d,          ckd,          0.91]
+    - [t2d,          cad,          0.74]
+    - [t2d,          stroke,       0.68]
+    - [hypertension, ckd,          0.82]
+    - [hypertension, stroke,       0.77]
+    - [hypertension, cad,          0.70]
+    - [cad,          stroke,       0.65]
+
+model:
+  encoder_dims:    [256, 128]
+  task_head_dims:  [64, 1]
+  dropout:         0.30
+  batch_norm:      true
+
+training:
+  batch_size:      256
+  lr:              0.001
+  weight_decay:    0.0001
+  lr_schedule:     cosine
+  early_stop_patience: 15
+  n_folds:         5
+  lambda_grid:     [0.05, 0.10, 0.15, 0.20, 0.25]
+
+intervention:
+  bmi_reduction:   5.0
+  sleep_target:    8.0
+  exercise_increase_steps: 3000
