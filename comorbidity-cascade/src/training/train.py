@@ -19,6 +19,7 @@ from data.dataset import ComorbidityDataset, create_kfold_splits, get_dataloader
 from models.mtl_flat import MTLFlat, masked_bce_loss
 from models.graph_propagation import ComorbidityDAG
 from models.mtl_graph import MTLWithGraph
+from models.causal_loss import CausalConsistencyLoss
 
 def get_model(model_name, input_dim, disease_names, config):
     if model_name == "mtl_flat":
@@ -26,12 +27,10 @@ def get_model(model_name, input_dim, disease_names, config):
         encoder_config['hidden_dims'] = config['model']['encoder_dims']
         head_config = {'hidden_dim': config['model']['task_head_dims'][0]}
         return MTLFlat(input_dim, disease_names, encoder_config, head_config)
-    elif model_name == "mtl_graph":
+    elif model_name in ["mtl_graph", "mtl_full"]:
         encoder_config = config['model']
         encoder_config['hidden_dims'] = config['model']['encoder_dims']
         head_config = {'hidden_dim': config['model']['task_head_dims'][0]}
-        # config['config_path'] is not natively in the config dict. 
-        # But we know we are training from the root directory with config.yaml
         dag = ComorbidityDAG("config.yaml")
         return MTLWithGraph(input_dim, disease_names, dag, encoder_config, head_config)
     else:
@@ -49,7 +48,7 @@ def compute_class_weights(labels_df, disease_names):
         weights.append(weight)
     return torch.tensor(weights, dtype=torch.float32)
 
-def train_one_epoch(model, loader, optimizer, scheduler, device, class_weights):
+def train_one_epoch(model, loader, optimizer, scheduler, device, class_weights, causal_loss_fn=None):
     model.train()
     total_loss = 0
     for x, y, mask in loader:
@@ -57,8 +56,15 @@ def train_one_epoch(model, loader, optimizer, scheduler, device, class_weights):
         
         optimizer.zero_grad()
         y_pred = model(x)
-        loss = masked_bce_loss(y_pred, y, mask, class_weights.to(device))
         
+        bce_loss = masked_bce_loss(y_pred, y, mask, class_weights.to(device))
+        
+        if causal_loss_fn:
+            causal_loss = causal_loss_fn(y_pred)
+            loss = bce_loss + causal_loss
+        else:
+            loss = bce_loss
+            
         loss.backward()
         optimizer.step()
         if scheduler:
@@ -140,6 +146,14 @@ def main():
         class_weights = compute_class_weights(labels_df.iloc[train_idx], disease_names)
         
         model = get_model(args.model, input_dim, disease_names, config).to(device)
+        
+        causal_loss_fn = None
+        if args.model == "mtl_full":
+            dag = ComorbidityDAG("config.yaml")
+            lambda_val = config["training"].get("lambda_selected", 0.15)
+            causal_loss_fn = CausalConsistencyLoss(dag, disease_names, lambda_weight=lambda_val)
+            print(f"Using CausalConsistencyLoss with lambda={lambda_val}")
+
         optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
         
         # Cosine Annealing Schedule
@@ -151,7 +165,7 @@ def main():
         ckpt_path = os.path.join(base_dir, f"checkpoints/{args.model}_fold{fold_idx}.pt")
         
         for epoch in range(num_epochs):
-            avg_loss = train_one_epoch(model, train_loader, optimizer, scheduler, device, class_weights)
+            avg_loss = train_one_epoch(model, train_loader, optimizer, scheduler, device, class_weights, causal_loss_fn)
             aurocs, macro_auroc = evaluate(model, val_loader, device, disease_names)
             
             if macro_auroc > best_macro_auroc:
