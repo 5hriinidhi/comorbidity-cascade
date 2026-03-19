@@ -12,7 +12,7 @@ nhanes:
     diabetes:      DIQ
     blood_pressure: BPQ
     cardiac:       MCQ
-    kidney:        KIQ
+    kidney:        KIQ_U
     cholesterol:   TCHOL
     glucose:       GLU
     body_measures: BMX
