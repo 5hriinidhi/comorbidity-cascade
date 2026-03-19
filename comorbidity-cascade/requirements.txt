@@ -1,0 +1,14 @@
+torch==2.1.0
+torchvision==0.16.0
+catboost==1.2.3
+scikit-learn==1.4.0
+pandas==2.2.0
+numpy==1.26.4
+scipy==1.12.0
+pyyaml==6.0.1
+requests==2.31.0
+pyreadstat==1.2.6
+shap==0.44.1
+matplotlib==3.8.3
+seaborn==0.13.2
+tqdm==4.66.2
