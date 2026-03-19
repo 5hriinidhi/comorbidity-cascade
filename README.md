@@ -67,5 +67,5 @@ This confirms that the model understands **Indirect Mediation**—fixing the roo
 The **Comorbidity Cascade** framework proves that encoding medical knowledge (like "obesity causes diabetes") directly into AI models makes them better at predicting complex, life-threatening events like Stroke. It moves us from "Black-Box" AI to **"Causal" AI** that actually understands the human body.
 
 ---
-**Authors:** AI Pair-Programming Session (2026)
+**Authors:** GROUP 4 EDI 1
 **Data Source:** [CDC NHANES](https://www.cdc.gov/nchs/nhanes/index.htm)
