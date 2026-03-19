@@ -13,6 +13,7 @@ def main():
     base_dir = "."
     catboost_file = os.path.join(base_dir, "results/baseline_auroc.csv")
     mtl_flat_file = os.path.join(base_dir, "results/mtl_flat_auroc.csv")
+    mtl_graph_file = os.path.join(base_dir, "results/mtl_graph_auroc.csv")
     mtl_full_file = os.path.join(base_dir, "results/mtl_full_auroc.csv")
     
     catboost_res = load_results(catboost_file) or {}
